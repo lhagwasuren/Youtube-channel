@@ -7,6 +7,7 @@ library(tidyverse)
 # Syntax
 
 iris
+head(iris,5)
 
 iris %>% group_by(Species) %>% summarise(avg=mean(Sepal.Length))
 
@@ -15,7 +16,7 @@ iris %>% group_by(Species) %>% summarise(avg=mean(Sepal.Length))
 economics
 
 gecon<-gather(economics,"indicators","values",-date)
-
+gecon
 
 # Subset observations (Rows)
 
@@ -47,8 +48,8 @@ df2<-econ %>% select("unemploy")
 df1
 df2
 
-bind_cols(df1,df2)
-
+a<-bind_cols(df1,df2)
+a
 # Aggregate
 
 library(scales)
@@ -56,6 +57,7 @@ library(scales)
 my_plot<-ggplot(gecon,aes(x=date,y=values))+geom_line(color="darkblue")+scale_y_continuous(labels = scales::comma) +
   facet_wrap(~indicators, scales = "free", ncol = 3) + 
   labs(x="Date",y="values",title="Economics")
+
 ggsave(plot =my_plot , filename = "my_plot.pdf", width = 25.4, height = 10.73)
 
 my_plot

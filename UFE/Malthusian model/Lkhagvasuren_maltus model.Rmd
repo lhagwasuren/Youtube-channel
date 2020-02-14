@@ -1,0 +1,111 @@
+---
+title: "Malthusian population growth model"
+author: "Lkhagvasuren Otgonbayar"
+date: "2/13/2020"
+output:   
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: vignette
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,warning=FALSE,message=FALSE,fig.align = 'c',fig.width = 8,fig.height = 4)
+```
+
+## Data and packages
+
+```{r prepare_data}
+library(tidyverse)
+library(readxl)
+library(forecast)
+
+setwd("C:/Users/DELL/Desktop/Hicheel/mongoliin ediin zasag/biy daalt/population increase rate model")
+
+popul<-read_xlsx("rus pop.xlsx",sheet=1,range=cell_cols('C'),
+                 col_types = c('numeric'))
+names(popul)<-c('pop')
+
+glimpse(popul)
+
+attach(popul)
+rus_pop<-ts(pop,start = c(1960,01),frequency = 1)
+
+```
+
+## Malthusian descrite model
+
+Equation: $p_t=(1+a)*p_{t-1}$
+
+```{r model1}
+p_lag<-stats::lag(rus_pop,1)
+x<-ts(p_lag[-length(p_lag)],start = c(1961,1))
+y=ts(rus_pop[-1],start = c(1961,1))
+
+model1<-tslm(y~x-1)
+summary(model1)
+
+s_id<-length(rus_pop)
+e_id<-s_id+6
+
+for(i in s_id:e_id){
+  a<-predict(model1,newdata=data.frame(x=tail(pop,1)))
+  pop[i]<-a}
+
+fcast<-forecast(model1,newdata = data.frame(x=tail(pop,7)))
+
+autoplot(rus_pop)+autolayer(fcast,series='Descrite model',PI=T)+
+  ylab('Population, million people')+ggtitle('Malthusian discrete model')
+
+```
+
+
+## Malthusian continuous model
+
+Equation: $P_t=c*e^{at}$
+
+```{r}
+y=ts(log(popul$pop),start=c(1960,1))
+x=ts(1:length(y),start = c(1960,1))
+
+model2<-tslm(y~x)
+summary(model2)
+sp<-length(y)+1
+ep<-length(y)+7
+
+
+fcast2<-forecast(model2,newdata = data.frame(x=sp:ep))
+
+autoplot(rus_pop)+ylab('population, million people')+ggtitle('Malthusian descrite and continuous model')+
+  autolayer(exp(fcast2$mean),series='Continuous model')+
+  autolayer(fcast,series = 'Descrite model')
+```
+
+## Model performance
+
+
+Accuracy = But without *test set*, it is just **training** set accuracy
+
+```{r accuracy}
+descrite<-accuracy(fcast)
+continuous<-accuracy(fcast2)
+
+table1<-rbind(descrite,continuous)
+rownames(table1)<-c('Descrite','Continuous')
+knitr::kable(table1)
+```
+
+Cross validation
+```{r}
+descrite<-CV(model1)
+continuous<-CV(model2)
+
+table2<-rbind(descrite,continuous)
+rownames(table1)<-c('Descrite','Continuous')
+knitr::kable(table2)
+```
+
+Source: [Forecasting:Principles and practice](https://otexts.com/fpp2/forecasting-regression.html)
+
+
+

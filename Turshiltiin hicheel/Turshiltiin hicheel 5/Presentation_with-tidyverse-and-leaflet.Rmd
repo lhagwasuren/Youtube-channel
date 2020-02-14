@@ -23,7 +23,7 @@ install.packages("tidyverse")
 ```
   
 * [Data wrangling cheat sheet](https://rstudio.com/wp-content/uploads/2015/02/data-wrangling-cheatsheet.pdf)
-* Илүү ихийг [эндээс](tidyverse.org) үзнэ үү.
+* Илүү ихийг [эндээс](https://www.tidyverse.org/) үзнэ үү.
 
 ## Data wrangling with dplyr and tidyr
 
@@ -37,7 +37,7 @@ datatable(iris, fillContainer = FALSE, options = list(pageLength = 5))
 
 Pipe operator ` %>% `
 
-```{r,}
+```{r}
 iris %>% group_by(Species) %>% summarise(avg=mean(Sepal.Length))
 ```
 
