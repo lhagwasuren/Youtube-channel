@@ -1,0 +1,80 @@
+---
+title: "Value at risk in R"
+author: "Lkhagvasuren Otgonbayar"
+date: "2/14/2020"
+output:   
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: vignette
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,warning=FALSE,message=FALSE,fig.align = 'c',fig.width = 8,fig.height = 4)
+```
+
+**I will estimate market risk with VaR model with R. I used Dell stock price.**
+
+
+## Data and packages
+```{r}
+library(quantmod)
+library(dygraphs)
+library(ggplot2)
+
+getSymbols(Symbols = "DELL",from='2016-08-17',auto.assign = T)
+
+tail(DELL)
+str(DELL)
+chartSeries(DELL, TA=NULL)
+barChart(DELL)
+
+```
+
+
+## Arithmetic return 
+
+```{r}
+dygraph(DELL$DELL.Close,main = 'Time series of DELL stock price'
+        ,ylab = 'Currency in USD')
+
+P<-DELL$DELL.Close
+ra <- (P-lag(P))/lag(P)
+rg <- log(P/lag(P))
+
+ggplot(data=ra,aes(ra))+
+  geom_histogram(bins = 18)+
+  xlab('Dell')
+
+ggplot(data=ra,aes(ra))+geom_density(fill='skyblue')
+
+
+mu_a<-mean(ra,na.rm=T)
+sd_a<-sd(ra,na.rm=T)
+z_a<-qnorm(.05)
+
+(VaR <- mu_a + z_a * sd_a)
+
+dygraph(ra,main='Aritmatic return and VaR',xlab = 'Date'
+        ,ylab='Return') %>% dyLimit(VaR, color = "red")
+```
+
+
+## Geometric return
+
+```{r}
+mu_g <- mean(rg,na.rm=T)
+sd_g <- sd(rg,na.rm=T)
+z_g <- qnorm(.05)
+
+(VaR<-mu_g + z_g*sd_g)
+
+dygraph(ra,main='Geometer return and VaR',xlab = 'Date'
+        ,ylab='Return') %>% dyLimit(VaR, color = "red")  
+
+```
+
+Source: 
+
+* [wikipedia](https://en.wikipedia.org/wiki/Value_at_risk)
+* [Technical Analysis with R](https://bookdown.org/kochiuyu/Technical-Analysis-with-R/) 
