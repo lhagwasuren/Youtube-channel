@@ -13,14 +13,15 @@ output:
 knitr::opts_chunk$set(echo = TRUE,warning=FALSE,message=FALSE,fig.align = 'c',fig.width = 8,fig.height = 4)
 ```
 
-**I will estimate market risk with VaR model with R. I used Dell stock price.**
+**I will estimate market risk with VaR  with R. I used Dell stock price.**
 
 
 ## Data and packages
 ```{r}
 library(quantmod)
 library(dygraphs)
-library(ggplot2)
+library(tseries)
+library(tidyverse)
 
 getSymbols(Symbols = "DELL",from='2016-08-17',auto.assign = T)
 
@@ -31,26 +32,49 @@ barChart(DELL)
 
 ```
 
-
-## Arithmetic return 
+## Check normality
 
 ```{r}
 dygraph(DELL$DELL.Close,main = 'Time series of DELL stock price'
         ,ylab = 'Currency in USD')
 
+
 P<-DELL$DELL.Close
 ra <- (P-lag(P))/lag(P)
 rg <- log(P/lag(P))
 
-ggplot(data=ra,aes(ra))+
+ra = na.omit(ra)
+rg = na.omit(rg)
+
+returns<-data.frame(ra$DELL.Close,rg$DELL.Close)
+head(returns)
+colnames(returns)<-c('ra','rg')
+
+head(returns)
+
+g_returns<-gather(returns,key='method',value = 'return')
+head(g_returns)
+
+ggplot(data=returns,aes(ra))+
   geom_histogram(bins = 18)+
   xlab('Dell')
 
-ggplot(data=ra,aes(ra))+geom_density(fill='skyblue')
+ggplot(data=g_returns,aes(x=return,color=method))+
+  geom_density()
 
+ggplot(data=g_returns,aes(x=method,y=return,fill=method))+
+  geom_boxplot()
 
-mu_a<-mean(ra,na.rm=T)
-sd_a<-sd(ra,na.rm=T)
+jarque.bera.test(ra)
+jarque.bera.test(rg)
+```
+
+## Arithmetic return 
+
+```{r}
+
+mu_a<-mean(ra)
+sd_a<-sd(ra)
 z_a<-qnorm(.05)
 
 (VaR <- mu_a + z_a * sd_a)
@@ -63,18 +87,19 @@ dygraph(ra,main='Aritmatic return and VaR',xlab = 'Date'
 ## Geometric return
 
 ```{r}
-mu_g <- mean(rg,na.rm=T)
-sd_g <- sd(rg,na.rm=T)
+mu_g <- mean(rg)
+sd_g <- sd(rg)
 z_g <- qnorm(.05)
 
 (VaR<-mu_g + z_g*sd_g)
 
 dygraph(ra,main='Geometer return and VaR',xlab = 'Date'
         ,ylab='Return') %>% dyLimit(VaR, color = "red")  
-
 ```
 
 Source: 
 
-* [wikipedia](https://en.wikipedia.org/wiki/Value_at_risk)
+* [VaR-Wikipedia](https://en.wikipedia.org/wiki/Value_at_risk)
 * [Technical Analysis with R](https://bookdown.org/kochiuyu/Technical-Analysis-with-R/) 
+* [Jarque bera test](https://www.statisticshowto.datasciencecentral.com/jarque-bera-test/)
+* [Normality assumption](https://www.statisticshowto.datasciencecentral.com/assumption-of-normality-test/)
