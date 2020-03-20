@@ -1,0 +1,131 @@
+---
+title: "Зах зээлийн эрсдэлийн хэмжих ARMA-GARCH хязгаарлалт"
+author: "Lkhagvasuren"
+date: "3/20/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,message = F,warning = F)
+```
+
+*Код* : (github repo)[]
+*Бичлэг*: (Youtube)[]
+
+Энэхүү илтгэлээр зах зээлийн эрсдэлийн хэмжих VaR аргачлалын төрлүүдийг харьцуулан харна. Үүнд энгийн VaR, EWMA VaR болон ARMA-GARCH VaR хязгаарлалтууд хамаарна. Онолын агуулгыг бус зөвхөн практик хэрэглээг харуулахыг зорьсон тул бусад сонсогчид маань wikipedia аас дэлгэрүүлж унших боломжтой. 
+
+## Data and packages
+
+*Quantmod* багцын тусламжтай yahoo-finance - аас DELL компанийн хувьцааны хаалтын ханшийн мэдээллийг импортолж, (rugarch)[] багцын тусламжтай VaR хязгаарлалтуудыг үнэлсэн болно.   
+```{r Data_packages}
+library(quantmod)  # import data from API
+library(dygraphs)  # time series plotting
+library(tseries)   # time series analysis
+library(tidyverse) # data wrangling
+library(forecast)  # best package of forecasting
+library(rugarch)   # ARMA-GARCH modelling
+
+# import DELL data from yahoo-finance
+getSymbols(Symbols = "DELL",from='2016-08-17',auto.assign = T)
+
+# some graphs
+graph<-dygraph(OHLC(DELL))
+dyCandlestick(graph)
+```
+
+
+## Return
+Арифметик өгөөжийг тооцож `auto.arima()` функцээр эрэмбийг тодорхойлов. Энэхүү функц нь AIC,SIC мэдээллийн шинжүүрийн тусламжтай оновчтой загварын сонгодог. `?auto.arima()` гэж тайлбарын авах боломжтой.
+
+```{r return}
+r = diff(DELL$DELL.Close)/lag(DELL$DELL.Close)
+r = na.omit(r)
+
+names(r)="Return"  # change column name
+
+head(r)  # show first 6 values
+
+Box.test(r,type = 'Box-Pierce') # Box-Pierce test to show stationary or non stationary
+
+model_arima = auto.arima(r)
+summary(model_arima)
+
+tsdisplay(model_arima$residuals) # plot residuals
+
+checkresiduals(model_arima) # forecast package's nice function
+```
+
+## ARMA-GARCH VaR 
+
+rugarch багцын ugarchspec болон ugarchfit функцүүдийн тусламжтай ARMA-GARCH загвар үнэлэв. Энэ багцтай холбоотой мэдээллийг (CRAN)[] аас авна уу.
+
+```{r garch}
+# define spec
+spec = ugarchspec(variance.model = list(model = 'sGARCH',
+                                         garchOrder = c(1,1)),
+                    mean.model = list(armaOrder=c(1,0),arfima=T,
+                    include.mean = F),
+                    distribution="norm")
+# Estimate model
+fit = ugarchfit(spec = spec, data = r)
+
+mu = fitted(fit)  
+sigma = sigma(fit)
+
+GARCH_VaR = mu + qnorm(.05)*sigma # VaR garch
+
+#plot(fit) # 12 plots. 1-12 change plots and 0-exit
+
+test = VaRTest(.05,r,GARCH_VaR) # backward testing
+names(test)
+
+test$actual.exceed/length(r)
+
+VaRplot(.05,r,GARCH_VaR)  # return and Var
+```
+
+## Simple and EWMA VaR
+
+EWMA VaR хязгаарлалт нь ARMA-GARCH VaR загварын тухайн тохиолдол билээ. Тухайлбал EWMA загварын дундажын үнэлгээ нь $\phi_0 = 0,\phi_1=\lambda,p=1,\theta_1=(1-\lambda), q=1$ байх $ARMA(1,1)$ процесс бол, вариацын үнэлгээ нь $\omega=0,\beta_1=\lambda,k=1,\alpha_1=(1-\lambda),l=1$ байх $GARCH(1,1)$ процесс байна.
+
+```{r other_vars}
+VaRStatic <- sd(r) * qnorm(0.05) 
+
+spec2 = ugarchspec(variance.model=list(model="iGARCH", 
+                                       garchOrder=c(1,1)),
+                   mean.model=list(armaOrder=c(1,0),
+                                   include.mean=F),
+                   distribution.model="norm", 
+                   fixed.pars=list(omega=0))
+
+ewma_fit = ugarchfit(spec = spec2, data = r)
+
+coef(ewma_fit)
+
+EWMA_VaR = fitted(ewma_fit) + qnorm(.05)*sigma(ewma_fit)
+
+VaRplot(.05,r,EWMA_VaR)
+```
+
+## Putting it all together 
+
+DELL компанийн хувьцааны ханшийн өгөөж болон бусад VaR хязгаарлалтыг нэг хавтгайд дүрслэв.
+
+```{r all}
+VaRs = cbind(r, VaRStatic, GARCH_VaR, EWMA_VaR)
+
+head(VaRs)
+
+# plot with rugarch
+plot(VaRs) 
+
+# dygraph plot
+dygraph(VaRs,main = 'Dell return and VaRs', 
+        xlab ='Date',ylab = "Rate" )
+```
+
+
+
+
+
+
