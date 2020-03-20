@@ -1,22 +1,27 @@
 ---
-title: "Зах зээлийн эрсдэлийн хэмжих ARMA-GARCH хязгаарлалт"
+title: "Зах зээлийн эрсдэлийг хэмжих ARMA-GARCH хязгаарлалт"
 author: "Lkhagvasuren"
 date: "3/20/2020"
-output: html_document
+output:   
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: vignette
+    toc: true
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE,message = F,warning = F)
+knitr::opts_chunk$set(echo = TRUE,message = F,warning = F,fig.align = 'center')
 ```
 
-*Код* : (github repo)[]
-*Бичлэг*: (Youtube)[]
+*Код* : [github repo](https://github.com/lhagwasuren/Youtube-channel/blob/master/UFE/GARCH_VaR/GARCH_VaR.R)
 
-Энэхүү илтгэлээр зах зээлийн эрсдэлийн хэмжих VaR аргачлалын төрлүүдийг харьцуулан харна. Үүнд энгийн VaR, EWMA VaR болон ARMA-GARCH VaR хязгаарлалтууд хамаарна. Онолын агуулгыг бус зөвхөн практик хэрэглээг харуулахыг зорьсон тул бусад сонсогчид маань wikipedia аас дэлгэрүүлж унших боломжтой. 
+*Бичлэг*: [Youtube]()
+
+Энэхүү илтгэлээр зах зээлийн эрсдэлийн хэмжих VaR аргачлалын төрлүүдийг харьцуулан харна. Үүнд энгийн VaR, EWMA VaR болон ARMA-GARCH VaR хязгаарлалтууд хамаарна. Онолын агуулгыг бус зөвхөн практик хэрэглээг харуулахыг зорьсон тул бусад сонсогчид маань *wikipedia* аас дэлгэрүүлж унших боломжтой. 
 
 ## Data and packages
 
-*Quantmod* багцын тусламжтай yahoo-finance - аас DELL компанийн хувьцааны хаалтын ханшийн мэдээллийг импортолж, (rugarch)[] багцын тусламжтай VaR хязгаарлалтуудыг үнэлсэн болно.   
+[Quantmod](https://cran.r-project.org/web/packages/quantmod/quantmod.pdf) багцын тусламжтай yahoo-finance - аас DELL компанийн хувьцааны хаалтын ханшийн мэдээллийг импортолж, [Rugarch](https://cran.r-project.org/web/packages/rugarch/rugarch.pdf) багцын тусламжтай VaR хязгаарлалтуудыг үнэлсэн болно.   
 ```{r Data_packages}
 library(quantmod)  # import data from API
 library(dygraphs)  # time series plotting
@@ -26,7 +31,7 @@ library(forecast)  # best package of forecasting
 library(rugarch)   # ARMA-GARCH modelling
 
 # import DELL data from yahoo-finance
-getSymbols(Symbols = "DELL",from='2016-08-17',auto.assign = T)
+getSymbols(Symbols = "DELL",from='2016-08-17',to='2020-03-19',auto.assign = T)
 
 # some graphs
 graph<-dygraph(OHLC(DELL))
@@ -38,6 +43,8 @@ dyCandlestick(graph)
 Арифметик өгөөжийг тооцож `auto.arima()` функцээр эрэмбийг тодорхойлов. Энэхүү функц нь AIC,SIC мэдээллийн шинжүүрийн тусламжтай оновчтой загварын сонгодог. `?auto.arima()` гэж тайлбарын авах боломжтой.
 
 ```{r return}
+r = log(DELL$DELL.Close)
+
 r = diff(DELL$DELL.Close)/lag(DELL$DELL.Close)
 r = na.omit(r)
 
@@ -57,7 +64,7 @@ checkresiduals(model_arima) # forecast package's nice function
 
 ## ARMA-GARCH VaR 
 
-rugarch багцын ugarchspec болон ugarchfit функцүүдийн тусламжтай ARMA-GARCH загвар үнэлэв. Энэ багцтай холбоотой мэдээллийг (CRAN)[] аас авна уу.
+rugarch багцын ugarchspec болон ugarchfit функцүүдийн тусламжтай ARMA-GARCH загвар үнэлэв. Энэ багцтай холбоотой мэдээллийг [CRAN](https://cran.r-project.org/web/packages/rugarch/rugarch.pdf) аас авна уу.
 
 ```{r garch}
 # define spec
@@ -125,7 +132,12 @@ dygraph(VaRs,main = 'Dell return and VaRs',
 ```
 
 
+# Source
 
-
+* Ц.Батсүх багшийн лекцийн материал [Ц.Батсүх](https://www.mongolbank.mn/news.aspx?tid=1&id=1932)
+* [Fitting and Predicting VaR based on an ARMA-GARCH Process](https://cran.r-project.org/web/packages/qrmtools/vignettes/ARMA_GARCH_VaR.html)
+* [VaR with GARCH(1,1)](https://rpubs.com/DejanPrv/VarGarch)
+* [Can we forecast gold prices using classical time series models?](https://www.rpubs.com/ddbs/gldforecasting)
+* [Rugarch](https://cran.r-project.org/web/packages/rugarch/rugarch.pdf)
 
 

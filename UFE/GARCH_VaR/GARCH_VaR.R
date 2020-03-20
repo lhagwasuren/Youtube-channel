@@ -9,15 +9,16 @@ library(forecast)
 library(rugarch)
 library(dygraphs)
 
-getSymbols(Symbols = "DELL",from='2016-08-17',auto.assign = T)
+getSymbols(Symbols = "DELL",from='2016-08-17',to='2020-03-19',auto.assign = T)
 
 graph<-dygraph(OHLC(DELL))
 dyCandlestick(graph)
 
 # 2. Return -------------------------------------------------------------
+r = log(DELL$DELL.Close)
 
 r = diff(DELL$DELL.Close)/lag(DELL$DELL.Close)
-r = na.omit(r)
+
 names(r)="Return"
 
 head(r)
