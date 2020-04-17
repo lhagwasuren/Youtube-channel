@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE,message = F,warning = F,fig.align = 'center')
 
 *Код* : [github repo](https://github.com/lhagwasuren/Youtube-channel/blob/master/UFE/GARCH_VaR/GARCH_VaR.R)
 
-*Бичлэг*: [Youtube]()
+*Бичлэг*: [Youtube](https://youtu.be/UiqQR4n1U5o?list=PLVebDyRdbYjBAlAYD8biJSpXTnCoAY7NZ)
 
 Энэхүү илтгэлээр зах зээлийн эрсдэлийн хэмжих VaR аргачлалын төрлүүдийг харьцуулан харна. Үүнд энгийн VaR, EWMA VaR болон ARMA-GARCH VaR хязгаарлалтууд хамаарна. Онолын агуулгыг бус зөвхөн практик хэрэглээг харуулахыг зорьсон тул бусад сонсогчид маань *wikipedia* аас дэлгэрүүлж унших боломжтой. 
 
